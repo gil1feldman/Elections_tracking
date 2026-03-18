@@ -1,1 +1,799 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מערכת ניטור טוהר הבחירות</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --navy-mid: #1b2d42;
+    --navy-light: #243b55;
+    --gold: #c9a84c;
+    --gold-light: #e2c882;
+    --gold-pale: #f5ecd4;
+    --slate: #8a9bb0;
+    --white: #f8f9fb;
+    --surface: #ffffff;
+    --border: #dde3ec;
+    --text-main: #1a2535;
+    --text-muted: #6b7c93;
+    --danger: #c0392b;
+    --success: #1e7a4e;
+    --radius: 10px;
+    --shadow: 0 2px 16px rgba(13,27,42,0.09);
+    --shadow-hover: 0 8px 32px rgba(13,27,42,0.14);
+  }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Assistant', sans-serif;
+    background: #eef1f6;
+    color: var(--text-main);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* ───── TOP BAR ───── */
+  .topbar {
+    background: var(--navy);
+    padding: 0 40px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--gold);
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-emblem {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .topbar-emblem svg { width: 20px; height: 20px; }
+  .topbar-title {
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.02em;
+  }
+  .topbar-sub {
+    font-size: 11px;
+    color: var(--slate);
+    font-weight: 300;
+    margin-top: 1px;
+  }
+  .topbar-date {
+    font-size: 12px;
+    color: var(--slate);
+    font-weight: 400;
+  }
+
+  /* ───── LAYOUT ───── */
+  .page-wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ───── SECTION HEADER ───── */
+  .section-header {
+    margin-bottom: 28px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section-header h1 {
+    font-family: 'Heebo', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .section-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .gold-line {
+    width: 48px;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+
+  /* ───── CARD ───── */
+  .card {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: visible;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card + .card { margin-top: 20px; }
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.10s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+
+  .card-header {
+    padding: 18px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--gold-pale);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon svg { width: 16px; height: 16px; stroke: var(--gold); }
+  .card-title {
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.01em;
+  }
+  .card-body {
+    padding: 24px 28px;
+  }
+
+  /* ───── GRID ───── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 620px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ───── FIELD ───── */
+  .field { position: relative; }
+  .field + .field { margin-top: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  label .req {
+    color: var(--gold);
+    margin-right: 2px;
+  }
+
+  input[type=text],
+  input[type=url],
+  input[type=datetime-local],
+  select,
+  textarea {
+    width: 100%;
+    font-family: 'Assistant', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    background: #f7f9fc;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  }
+  textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a9bb0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 12px center;
+    padding-left: 36px;
+  }
+
+  /* ───── AUTOCOMPLETE ───── */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    background: var(--surface);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-hover);
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+  .autocomplete-list.open { display: block; }
+  .autocomplete-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f0f2f5;
+  }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover, .autocomplete-item.active {
+    background: var(--gold-pale);
+    color: var(--navy);
+  }
+  .autocomplete-item em {
+    font-style: normal;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  /* ───── IMPACT SELECTOR ───── */
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+  }
+  @media (max-width: 560px) { .impact-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .impact-btn {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-family: 'Assistant', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #f7f9fc;
+    transition: all 0.18s;
+    line-height: 1.3;
+    user-select: none;
+  }
+  .impact-btn:hover { border-color: var(--slate); background: #f0f2f6; }
+  .impact-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+  .impact-btn[data-val="מחליש מאוד"].sel   { background: #fde8e8; border-color: #c0392b; color: #c0392b; }
+  .impact-btn[data-val="מחליש"].sel        { background: #fef0eb; border-color: #e05c2a; color: #e05c2a; }
+  .impact-btn[data-val="מחליש קצת"].sel   { background: #fff5e6; border-color: #d97c1a; color: #d97c1a; }
+  .impact-btn[data-val="מחזק קצת"].sel    { background: #eafaf0; border-color: #27ae60; color: #27ae60; }
+  .impact-btn[data-val="מחזק"].sel         { background: #d6f5e3; border-color: #1e8449; color: #1e8449; }
+  .impact-btn[data-val="מחזק מאוד"].sel   { background: #c4efd4; border-color: #156535; color: #156535; }
+
+  input[type=hidden] { display: none; }
+
+  /* ───── SUBMIT ───── */
+  .submit-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 36px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.01em;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-submit::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 0 0 10px 10px;
+  }
+  .btn-submit:hover { background: var(--navy-light); transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .btn-clear {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-family: 'Assistant', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--slate); color: var(--text-main); }
+
+  /* ───── TOAST ───── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--navy);
+    color: var(--white);
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { border-bottom-color: var(--danger); }
+
+  /* ───── SPINNER ───── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .btn-submit.loading .spinner { display: block; }
+  .btn-submit.loading .btn-text { opacity: 0.7; }
+
+  /* ───── CHAR COUNTER ───── */
+  .char-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: left;
+    margin-top: 4px;
+  }
+
+  /* ───── ANIMATIONS ───── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ───── LOADING OVERLAY ───── */
+  .loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: var(--text-muted);
+    font-size: 14px;
+    gap: 12px;
+  }
+  .loading-dot {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:.3} 40%{opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-emblem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="topbar-title">מערכת ניטור טוהר הבחירות</div>
+      <div class="topbar-sub">תיעוד ומעקב ידיעות</div>
+    </div>
+  </div>
+  <div class="topbar-date" id="topbarDate"></div>
+</header>
+
+<!-- MAIN -->
+<main class="page-wrapper" id="mainContent" style="display:none">
+
+  <div class="section-header">
+    <div class="gold-line"></div>
+    <h1>הוספת ידיעה חדשה</h1>
+    <p>מלאו את הפרטים לתיעוד ידיעה במערכת הניטור הלאומית</p>
+  </div>
+
+  <!-- CARD 1: פרטי הידיעה -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+      </div>
+      <span class="card-title">פרטי הידיעה</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="field">
+          <label>תאריך ושעה</label>
+          <input type="datetime-local" id="fDate">
+        </div>
+        <div class="field">
+          <label>קישור לידיעה</label>
+          <input type="url" id="fLink" placeholder="https://..." autocomplete="off">
+        </div>
+      </div>
+      <div class="field">
+        <label>תיאור קצר <span class="req">*</span></label>
+        <textarea id="fDesc" placeholder="תיאור תמציתי של הידיעה..." maxlength="500" rows="3"></textarea>
+        <div class="char-count"><span id="descCount">0</span>/500</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 2: מקור ופרסום -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <span class="card-title">מקור ופרסום</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div class="field autocomplete-wrap">
+          <label>מהות הפעולה <span class="req">*</span></label>
+          <select id="fActionType">
+            <option value="">— בחרו —</option>
+          </select>
+        </div>
+        <div class="field autocomplete-wrap">
+          <label>שם הדובר / המפרסם <span class="req">*</span></label>
+          <input type="text" id="fSpeaker" placeholder="הקלידו שם..." autocomplete="off">
+          <div class="autocomplete-list" id="acSpeaker"></div>
+        </div>
+        <div class="field autocomplete-wrap">
+          <label>איפה פורסם <span class="req">*</span></label>
+          <input type="text" id="fWhere" placeholder="ערוץ / פלטפורמה..." autocomplete="off">
+          <div class="autocomplete-list" id="acWhere"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:20px">
+        <label>יעד הפרסום <span class="req">*</span></label>
+        <select id="fTarget">
+          <option value="">— בחרו —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 3: השפעה -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <span class="card-title">השפעה על טוהר הבחירות</span>
+    </div>
+    <div class="card-body">
+      <label>דירוג ההשפעה <span class="req">*</span></label>
+      <div class="impact-grid" id="impactGrid">
+        <button type="button" class="impact-btn" data-val="מחליש מאוד">
+          <span class="impact-icon">🔴</span>מחליש מאוד
+        </button>
+        <button type="button" class="impact-btn" data-val="מחליש">
+          <span class="impact-icon">🟠</span>מחליש
+        </button>
+        <button type="button" class="impact-btn" data-val="מחליש קצת">
+          <span class="impact-icon">🟡</span>מחליש קצת
+        </button>
+        <button type="button" class="impact-btn" data-val="מחזק קצת">
+          <span class="impact-icon">🟢</span>מחזק קצת
+        </button>
+        <button type="button" class="impact-btn" data-val="מחזק">
+          <span class="impact-icon">💚</span>מחזק
+        </button>
+        <button type="button" class="impact-btn" data-val="מחזק מאוד">
+          <span class="impact-icon">✅</span>מחזק מאוד
+        </button>
+      </div>
+      <input type="hidden" id="fImpact">
+    </div>
+  </div>
+
+  <!-- CARD 4: הערות -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span class="card-title">הערות</span>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>הערות נוספות</label>
+        <textarea id="fNotes" placeholder="הוסיפו הקשר, הערות, או מידע משלים..." rows="3"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="submit-area">
+    <button class="btn-submit" id="btnSubmit" onclick="submitForm()">
+      <div class="spinner"></div>
+      <span class="btn-text">שמירת הידיעה</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="btn-clear" onclick="clearForm()">איפוס טופס</button>
+  </div>
+
+</main>
+
+<!-- Loading -->
+<div id="pageLoader" style="display:flex">
+  <div class="loading-overlay">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <span style="margin-right:8px">טוען נתונים...</span>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycby-BaWvmy8kpcl7tUSZVwhsGHYxk2QPTY76vgLa5ktDoDkue03_StfTnwYCmIKEONWV/exec";
+
+// ── Date in topbar ──
+function updateTopbarDate() {
+  const now = new Date();
+  document.getElementById('topbarDate').textContent =
+    now.toLocaleDateString('he-IL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+updateTopbarDate();
+
+// ── API call ──
+async function api(params) {
+  const url = new URL(API);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  return res.json();
+}
+
+// ── Load options & init ──
+async function init() {
+  try {
+    const data = await api({ action: 'getOptions' });
+    if (data.success) {
+      populateSelect('fActionType', data.options['מהות הפעולה'] || []);
+      populateSelect('fTarget',     data.options['יעד הפרסום']  || []);
+    }
+  } catch(e) { console.warn('Could not load options:', e); }
+  document.getElementById('pageLoader').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+function populateSelect(id, values) {
+  const sel = document.getElementById(id);
+  values.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = v;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Autocomplete ──
+const acTimers = {};
+function setupAutocomplete(inputId, listId, fieldName) {
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(listId);
+  let activeIdx = -1;
+
+  input.addEventListener('input', () => {
+    clearTimeout(acTimers[inputId]);
+    acTimers[inputId] = setTimeout(() => fetchSuggestions(input, list, fieldName), 250);
+    activeIdx = -1;
+  });
+
+  input.addEventListener('keydown', e => {
+    const items = list.querySelectorAll('.autocomplete-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx + 1, items.length - 1);
+      highlight(items, activeIdx);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx - 1, 0);
+      highlight(items, activeIdx);
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.preventDefault();
+      input.value = items[activeIdx].dataset.val;
+      closeList(list);
+    } else if (e.key === 'Escape') {
+      closeList(list);
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !list.contains(e.target)) closeList(list);
+  });
+}
+
+function highlight(items, idx) {
+  items.forEach((it, i) => it.classList.toggle('active', i === idx));
+  if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+}
+
+async function fetchSuggestions(input, list, fieldName) {
+  const q = input.value.trim();
+  if (!q) { closeList(list); return; }
+  try {
+    const data = await api({ action:'getAutoComplete', field: fieldName, query: q });
+    if (data.success && data.suggestions.length) {
+      renderList(list, data.suggestions, input, q);
+    } else { closeList(list); }
+  } catch(e) { closeList(list); }
+}
+
+function renderList(list, suggestions, input, q) {
+  list.innerHTML = '';
+  suggestions.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    item.dataset.val = s;
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    item.innerHTML = s.replace(re, '<em>$1</em>');
+    item.addEventListener('mousedown', e => {
+      e.preventDefault();
+      input.value = s;
+      closeList(list);
+    });
+    list.appendChild(item);
+  });
+  list.classList.add('open');
+}
+
+function closeList(list) {
+  list.classList.remove('open');
+  list.innerHTML = '';
+}
+
+// ── Impact buttons ──
+document.getElementById('impactGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.impact-btn');
+  if (!btn) return;
+  document.querySelectorAll('.impact-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('fImpact').value = btn.dataset.val;
+});
+
+// ── Char counter ──
+document.getElementById('fDesc').addEventListener('input', function() {
+  document.getElementById('descCount').textContent = this.value.length;
+});
+
+// ── Submit ──
+async function submitForm() {
+  const desc   = document.getElementById('fDesc').value.trim();
+  const action = document.getElementById('fActionType').value;
+  const speaker= document.getElementById('fSpeaker').value.trim();
+  const where  = document.getElementById('fWhere').value.trim();
+  const target = document.getElementById('fTarget').value;
+  const impact = document.getElementById('fImpact').value;
+
+  if (!desc)    return showToast('יש להזין תיאור קצר', true);
+  if (!action)  return showToast('יש לבחור מהות הפעולה', true);
+  if (!speaker) return showToast('יש להזין שם דובר/מפרסם', true);
+  if (!where)   return showToast('יש להזין היכן פורסם', true);
+  if (!target)  return showToast('יש לבחור יעד פרסום', true);
+  if (!impact)  return showToast('יש לבחור השפעה על טוהר הבחירות', true);
+
+  const btn = document.getElementById('btnSubmit');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  // Format date
+  let dateVal = document.getElementById('fDate').value;
+  if (dateVal) {
+    const d = new Date(dateVal);
+    dateVal = d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'});
+  }
+
+  try {
+    const res = await api({
+      action:      'addRow',
+      date:        dateVal,
+      description: desc,
+      link:        document.getElementById('fLink').value.trim(),
+      actionType:  action,
+      speaker:     speaker,
+      publishedAt: where,
+      target:      target,
+      impact:      impact,
+      notes:       document.getElementById('fNotes').value.trim()
+    });
+
+    if (res.success) {
+      showToast('✓ הידיעה נשמרה בהצלחה (שורה ' + res.rowNumber + ')');
+      clearForm();
+    } else {
+      showToast('שגיאה: ' + (res.error || 'אירעה שגיאה'), true);
+    }
+  } catch(e) {
+    showToast('שגיאת תקשורת – נסו שנית', true);
+  }
+
+  btn.classList.remove('loading');
+  btn.disabled = false;
+}
+
+// ── Clear form ──
+function clearForm() {
+  ['fDate','fLink','fDesc','fSpeaker','fWhere','fNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('fActionType').selectedIndex = 0;
+  document.getElementById('fTarget').selectedIndex = 0;
+  document.getElementById('fImpact').value = '';
+  document.querySelectorAll('.impact-btn').forEach(b => b.classList.remove('sel'));
+  document.getElementById('descCount').textContent = '0';
+  ['acSpeaker','acWhere'].forEach(id => closeList(document.getElementById(id)));
+}
+
+// ── Toast ──
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Init ──
+setupAutocomplete('fSpeaker', 'acSpeaker', 'שם הדובר/המפרסם');
+setupAutocomplete('fWhere',   'acWhere',   'איפה פורסם');
+init();
+</script>
+</body>
+</html>
