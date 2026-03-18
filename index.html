@@ -655,8 +655,8 @@ function setupAutocomplete(inputId, listId, fieldName) {
     }
   });
 
-  document.addEventListener('click', e => {
-    if (!input.contains(e.target) && !list.contains(e.target)) closeList(list);
+  input.addEventListener('blur', () => {
+    setTimeout(() => closeList(list), 150);
   });
 }
 
