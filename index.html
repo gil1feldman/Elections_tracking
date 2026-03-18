@@ -184,7 +184,7 @@
 
   input[type=text],
   input[type=url],
-  input[type=datetime-local],
+  input[type=date],
   select,
   textarea {
     width: 100%;
@@ -455,7 +455,7 @@
       <div class="grid-2" style="margin-bottom:20px">
         <div class="field">
           <label>תאריך ושעה</label>
-          <input type="datetime-local" id="fDate">
+          <input type="date" id="fDate">
         </div>
         <div class="field">
           <label>קישור לידיעה</label>
@@ -736,8 +736,8 @@ async function submitForm() {
   // Format date
   let dateVal = document.getElementById('fDate').value;
   if (dateVal) {
-    const d = new Date(dateVal);
-    dateVal = d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'});
+    const d = new Date(dateVal + 'T12:00:00');
+    dateVal = d.toLocaleDateString('he-IL');
   }
 
   try {
