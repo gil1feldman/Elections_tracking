@@ -182,6 +182,27 @@
     margin-right: 2px;
   }
 
+  /* ───── FIELD HINT ───── */
+  .field-hint {
+    font-size: 11px;
+    color: var(--slate);
+    font-weight: 400;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .field-hint::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a9bb0' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    flex-shrink: 0;
+  }
+
   input[type=text],
   input[type=url],
   input[type=date],
@@ -479,7 +500,9 @@
       <span class="card-title">מקור ופרסום</span>
     </div>
     <div class="card-body">
-      <div class="grid-3">
+
+      <!-- שורה 1: מהות הפעולה + מי הגורמ/ים + שיוך מפלגתי -->
+      <div class="grid-3" style="margin-bottom:20px">
         <div class="field autocomplete-wrap">
           <label>מהות הפעולה <span class="req">*</span></label>
           <select id="fActionType">
@@ -487,9 +510,24 @@
           </select>
         </div>
         <div class="field autocomplete-wrap">
-          <label>שם הדובר / המפרסם <span class="req">*</span></label>
-          <input type="text" id="fSpeaker" placeholder="הקלידו שם..." autocomplete="off">
+          <label>מי הגורמ/ים <span class="req">*</span></label>
+          <input type="text" id="fSpeaker" placeholder="הקלידו שם גורם..." autocomplete="off">
           <div class="autocomplete-list" id="acSpeaker"></div>
+          <div class="field-hint">ניתן להוסיף מספר גורמים מופרדים בפסיק</div>
+        </div>
+        <div class="field autocomplete-wrap">
+          <label>שיוך מפלגתי <span class="req">*</span></label>
+          <input type="text" id="fParty" placeholder="שם מפלגה / גוף..." autocomplete="off">
+          <div class="autocomplete-list" id="acParty"></div>
+          <div class="field-hint">ניתן לציין מספר מפלגות מופרדות בפסיק</div>
+        </div>
+      </div>
+
+      <!-- שורה 2: תפקיד הדובר הראשי + איפה פורסם -->
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="field">
+          <label>תפקיד הגורם הראשי</label>
+          <input type="text" id="fRole" placeholder="לדוגמה: שר הפנים, יו&quot;ר ועדה..." autocomplete="off">
         </div>
         <div class="field autocomplete-wrap">
           <label>איפה פורסם <span class="req">*</span></label>
@@ -497,12 +535,15 @@
           <div class="autocomplete-list" id="acWhere"></div>
         </div>
       </div>
-      <div class="field" style="margin-top:20px">
+
+      <!-- שורה 3: יעד הפרסום -->
+      <div class="field">
         <label>יעד הפרסום <span class="req">*</span></label>
         <select id="fTarget">
           <option value="">— בחרו —</option>
         </select>
       </div>
+
     </div>
   </div>
 
@@ -582,7 +623,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycby-BaWvmy8kpcl7tUSZVwhsGHYxk2QPTY76vgLa5ktDoDkue03_StfTnwYCmIKEONWV/exec";
+const API = "https://script.google.com/macros/s/AKfycbyXtefqXG3FLzNm1LjH2Qbj6pHhjy7De5lajhHL4mm49Jl8MR8ijqEGx_zn4FFrWpY/exec";
 
 // ── Date in topbar ──
 function updateTopbarDate() {
@@ -648,7 +689,11 @@ function setupAutocomplete(inputId, listId, fieldName) {
       highlight(items, activeIdx);
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault();
-      input.value = items[activeIdx].dataset.val;
+      // For multi-value fields, append to existing value
+      const current = input.value;
+      const lastComma = current.lastIndexOf(',');
+      const prefix = lastComma >= 0 ? current.substring(0, lastComma + 1) + ' ' : '';
+      input.value = prefix + items[activeIdx].dataset.val;
       closeList(list);
     } else if (e.key === 'Escape') {
       closeList(list);
@@ -660,13 +705,19 @@ function setupAutocomplete(inputId, listId, fieldName) {
   });
 }
 
+// For multi-value autocomplete fields (speaker, party), query only the last segment after comma
+function getLastSegment(val) {
+  const parts = val.split(',');
+  return parts[parts.length - 1].trim();
+}
+
 function highlight(items, idx) {
   items.forEach((it, i) => it.classList.toggle('active', i === idx));
   if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
 }
 
 async function fetchSuggestions(input, list, fieldName) {
-  const q = input.value.trim();
+  const q = getLastSegment(input.value);
   if (!q) { closeList(list); return; }
   try {
     const data = await api({ action:'getAutoComplete', field: fieldName, query: q });
@@ -686,7 +737,11 @@ function renderList(list, suggestions, input, q) {
     item.innerHTML = s.replace(re, '<em>$1</em>');
     item.addEventListener('mousedown', e => {
       e.preventDefault();
-      input.value = s;
+      // Append to existing comma-separated values
+      const current = input.value;
+      const lastComma = current.lastIndexOf(',');
+      const prefix = lastComma >= 0 ? current.substring(0, lastComma + 1) + ' ' : '';
+      input.value = prefix + s;
       closeList(list);
     });
     list.appendChild(item);
@@ -718,13 +773,16 @@ async function submitForm() {
   const desc   = document.getElementById('fDesc').value.trim();
   const action = document.getElementById('fActionType').value;
   const speaker= document.getElementById('fSpeaker').value.trim();
+  const party  = document.getElementById('fParty').value.trim();
+  const role   = document.getElementById('fRole').value.trim();
   const where  = document.getElementById('fWhere').value.trim();
   const target = document.getElementById('fTarget').value;
   const impact = document.getElementById('fImpact').value;
 
   if (!desc)    return showToast('יש להזין תיאור קצר', true);
   if (!action)  return showToast('יש לבחור מהות הפעולה', true);
-  if (!speaker) return showToast('יש להזין שם דובר/מפרסם', true);
+  if (!speaker) return showToast('יש להזין שם גורם/ים', true);
+  if (!party)   return showToast('יש להזין שיוך מפלגתי', true);
   if (!where)   return showToast('יש להזין היכן פורסם', true);
   if (!target)  return showToast('יש לבחור יעד פרסום', true);
   if (!impact)  return showToast('יש לבחור השפעה על טוהר הבחירות', true);
@@ -748,6 +806,8 @@ async function submitForm() {
       link:        document.getElementById('fLink').value.trim(),
       actionType:  action,
       speaker:     speaker,
+      party:       party,
+      role:        role,
       publishedAt: where,
       target:      target,
       impact:      impact,
@@ -770,7 +830,7 @@ async function submitForm() {
 
 // ── Clear form ──
 function clearForm() {
-  ['fDate','fLink','fDesc','fSpeaker','fWhere','fNotes'].forEach(id => {
+  ['fDate','fLink','fDesc','fSpeaker','fParty','fRole','fWhere','fNotes'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('fActionType').selectedIndex = 0;
@@ -778,7 +838,7 @@ function clearForm() {
   document.getElementById('fImpact').value = '';
   document.querySelectorAll('.impact-btn').forEach(b => b.classList.remove('sel'));
   document.getElementById('descCount').textContent = '0';
-  ['acSpeaker','acWhere'].forEach(id => closeList(document.getElementById(id)));
+  ['acSpeaker','acParty','acWhere'].forEach(id => closeList(document.getElementById(id)));
 }
 
 // ── Toast ──
@@ -791,7 +851,8 @@ function showToast(msg, isError = false) {
 }
 
 // ── Init ──
-setupAutocomplete('fSpeaker', 'acSpeaker', 'שם הדובר/המפרסם');
+setupAutocomplete('fSpeaker', 'acSpeaker', 'מי הגורמ/ים');
+setupAutocomplete('fParty',   'acParty',   'שיוך מפלגתי');
 setupAutocomplete('fWhere',   'acWhere',   'איפה פורסם');
 init();
 </script>
