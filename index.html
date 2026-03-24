@@ -536,9 +536,9 @@
         </div>
       </div>
 
-      <!-- שורה 3: יעד הפרסום -->
+      <!-- שורה 3: יעד הפעולה -->
       <div class="field">
-        <label>יעד הפרסום <span class="req">*</span></label>
+        <label>יעד הפעולה <span class="req">*</span></label>
         <select id="fTarget">
           <option value="">— בחרו —</option>
         </select>
@@ -647,7 +647,7 @@ async function init() {
     const data = await api({ action: 'getOptions' });
     if (data.success) {
       populateSelect('fActionType', data.options['מהות הפעולה'] || []);
-      populateSelect('fTarget',     data.options['יעד הפרסום']  || []);
+      populateSelect('fTarget',     data.options['יעד הפעולה']  || []);
     }
   } catch(e) { console.warn('Could not load options:', e); }
   document.getElementById('pageLoader').style.display = 'none';
